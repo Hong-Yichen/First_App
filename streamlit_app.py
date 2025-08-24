@@ -16,15 +16,6 @@ def add_bg_from_local(image_file):
     st.markdown(page_bg, unsafe_allow_html=True)
 
 add_bg_from_local("background.png")
-st.markdown("""
-    <style>
-        [data-testid="stSidebar"] {display: none !important;}
-        [data-testid="stSidebarNav"] {display: none !important;}
-        [data-testid="collapsedControl"] {display: none !important;}
-        div[data-testid="stToolbar"] {visibility: hidden !important;}
-    </style>
-    """, unsafe_allow_html=True)
-
 st.markdown(
     """
     <h1 style="
@@ -37,7 +28,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
 add_bg_from_local("background.png")
 st.title("Harry Potter App")
 st.caption("Created by Yichen")
