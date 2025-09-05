@@ -1,27 +1,6 @@
 import streamlit as st
 import base64
 
-def login(username, password, users):
-    if username in users:
-        if users[username] == password:
-            st.switch_page("pages/homepage_for_registered_users.py")            
-        else:
-            print("password doesn't match")
-    else:
-        print("user isn't in the system")
-
-def read_users():
-        usernames = {}
-        try:
-            with open("usernames_and_passwords.txt", "r") as f:
-                for line in f:
-                    line = line.strip()
-                    if line:  
-                        uname, pwd = line.split(",", 1)
-                        usernames[uname] = pwd
-                return usernames
-        except FileNotFoundError:
-            pass 
 def add_bg_from_local(image_file):          #For backgroung image
     with open(image_file, "rb") as f:
         encoded = base64.b64encode(f.read()).decode()
@@ -105,35 +84,3 @@ st.markdown(                 #For text "Created by Yichen"
     """,
     unsafe_allow_html=True
 )
-st.markdown(           #For text "Login"
-    "<h2 style='color: white;'>Login</h2>",
-    unsafe_allow_html=True
-)
-st.markdown(
-    """
-    <style>
-    /* Only the first text input's label */
-    div[data-testid="stTextInput"]:nth-of-type(1) label {
-        color: white !important;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-email = st.text_input("Email Address")
-password = st.text_input("password")
-if st.button("Login"):
-    login(email, password, read_users())
-st.markdown(        #Make divider grey
-    '<hr style="border:0;border-top:2px solid grey;margin:1rem 0;">',
-    unsafe_allow_html=True
-)
-st.markdown(         #For text "Don't have an account?"
-    "<h2 style='color: white;'>Don't have an account?</h2>",
-    unsafe_allow_html=True
-)
-if st.button("Sign up"):
-    st.switch_page("pages/sign_up_page.py")
-
-
-

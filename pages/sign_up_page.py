@@ -1,5 +1,6 @@
 import streamlit as st
 import base64
+import datetime
 
 def sign_up(username, password, users):
     with open("usernames_and_passwords.txt", "a") as f:  # append mode
@@ -7,7 +8,7 @@ def sign_up(username, password, users):
              print("user already exist")
         else:
             f.write(f"\n{username},{password}")
-            print(f"User {username} saved.")
+            st.switch_page("pages/homepage_for_registered_users.py")
 
 def read_users():
         usernames = {}
@@ -18,7 +19,7 @@ def read_users():
                     if line: 
                         uname, pwd = line.split(",", 1)
                         usernames[uname] = pwd
-                        return usernames
+                return usernames
         except FileNotFoundError:
             pass 
 def add_bg_from_local(image_file):          #For backgroung image
@@ -56,7 +57,8 @@ st.markdown(                  #Make buttons' background blue and text white
     """,
     unsafe_allow_html=True
 )
-st.markdown(              #Make text inputs white
+st.markdown(            #Make text inputs white
+  
     """
     <style>
     /* Only the first text input's label */
@@ -67,6 +69,12 @@ st.markdown(              #Make text inputs white
     """,
     unsafe_allow_html=True
 )
+#Style all labels white
+st.markdown("""            
+    <style>
+    label { color: white !important; }
+    </style>
+    """, unsafe_allow_html=True)
 
 add_bg_from_local("background.png")
 st.markdown(          #For text "Harry Potter App"
@@ -117,7 +125,11 @@ st.markdown(           #For text "Enjoy magical features including the official 
     """,
     unsafe_allow_html=True
 )
-birthday = st.date_input("Date of Birthday")
+birthday = st.date_input(
+    "Date of Birthday",
+    min_value=datetime.date(2000, 1, 1),
+    max_value=datetime.date.today()
+)
 email = st.text_input("Email Address")
 password = st.text_input("Password")
 first_name = st.text_input("First Name")
