@@ -121,7 +121,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 email = st.text_input("Email Address")
-password = st.text_input("password")
+password = st.text_input("Password")
 if st.button("Login"):
     login(email, password, read_users())
 st.markdown(        #Make divider grey

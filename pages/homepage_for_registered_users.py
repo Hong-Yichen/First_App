@@ -84,3 +84,5 @@ st.markdown(                 #For text "Created by Yichen"
     """,
     unsafe_allow_html=True
 )
+if st.button("Hogwarts Sorting"):
+    st.switch_page("pages/hogwarts_sorting.py")
