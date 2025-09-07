@@ -6,9 +6,9 @@ def login(username, password, users):
         if users[username] == password:
             st.switch_page("pages/homepage_for_registered_users.py")            
         else:
-            print("password doesn't match")
+            st.error("We can't find this email and password combination. Have you been Confunded? Try again.")
     else:
-        print("user isn't in the system")
+        st.error("We can't find this email in our database. Have you been Confunded? Try again.")
 
 def read_users():
         usernames = {}

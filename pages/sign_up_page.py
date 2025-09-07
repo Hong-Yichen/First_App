@@ -5,7 +5,7 @@ import datetime
 def sign_up(username, password, users):
     with open("usernames_and_passwords.txt", "a") as f:  # append mode
         if username in users:
-             print("user already exist")
+            st.error("Looks like you already have a Harry Potter account with this email")
         else:
             f.write(f"\n{username},{password}")
             st.switch_page("pages/homepage_for_registered_users.py")

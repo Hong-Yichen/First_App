@@ -442,8 +442,3 @@ if st.session_state.submitted and st.session_state.result:
     """
 
     st.markdown(banner_html, unsafe_allow_html=True)
-
-    if st.session_state.tie_info:
-        st.info(f"There was a tie between: {', '.join(st.session_state.tie_info)}. The Sorting Hat used your answers to decide.")
-
-    st.write("")  # spacing
