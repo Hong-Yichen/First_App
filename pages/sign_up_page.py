@@ -1,6 +1,7 @@
 import streamlit as st
 import base64
 import datetime
+import setup
 
 def sign_up(username, password, users):
     with open("usernames_and_passwords.txt", "a") as f:  # append mode
@@ -22,61 +23,8 @@ def read_users():
                 return usernames
         except FileNotFoundError:
             pass 
-def add_bg_from_local(image_file):          #For backgroung image
-    with open(image_file, "rb") as f:
-        encoded = base64.b64encode(f.read()).decode()
-    page_bg = f"""
-    <style>
-    [data-testid="stAppViewContainer"] {{
-        background-image: url("data:image/png;base64,{encoded}");
-        background-size: cover;
-        background-position: center;
-    }}
-    </style>
-    """
-    st.markdown(page_bg, unsafe_allow_html=True)
-st.markdown(                  #Make buttons' background blue and text white
-    """
-    <style>
-    div.stButton > button {
-        color: white !important;
-        background-color: #0073e6;
-        border-radius: 8px;
-        padding: 8px 20px;
-        border: none;
-        font-weight: bold;
-        transition: 0.3s;
-    }
-
-    div.stButton > button:hover {
-        background-color: #005bb5;
-        color: #ffcc00 !important; /* text turns gold on hover */
-        transform: scale(1.05); /* button grows slightly */
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-st.markdown(            #Make text inputs white
-  
-    """
-    <style>
-    /* Only the first text input's label */
-    div[data-testid="stTextInput"]:nth-of-type(1) label {
-        color: white !important;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-#Style all labels white
-st.markdown("""            
-    <style>
-    label { color: white !important; }
-    </style>
-    """, unsafe_allow_html=True)
-
-add_bg_from_local("background.png")
+setup.general_setup()
+setup.add_bg_from_local("background.png")
 st.markdown(          #For text "Harry Potter App"
     """
     <style>
@@ -125,7 +73,7 @@ st.markdown(           #For text "Enjoy magical features including the official 
     """,
     unsafe_allow_html=True
 )
-birthday = st.date_input(
+st.date_input(
     "Date of Birthday",
     min_value=datetime.date(2000, 1, 1),
     max_value=datetime.date.today()

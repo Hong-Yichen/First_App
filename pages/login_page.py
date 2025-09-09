@@ -1,75 +1,43 @@
 import streamlit as st
 import base64
+import setup
 
 def login(username, password, users):
     if username in users:
         if users[username] == password:
-            st.switch_page("pages/homepage_for_registered_users.py")            
+            st.session_state.user_information = read_specific_user_information(username)
+            st.switch_page("pages/homepage_for_registered_users.py")
         else:
             st.error("We can't find this email and password combination. Have you been Confunded? Try again.")
     else:
-        st.error("We can't find this email in our database. Have you been Confunded? Try again.")
-
+        st.error("We can't find this email. Have you been Confunded? Try again.")
 def read_users():
-        usernames = {}
-        try:
-            with open("usernames_and_passwords.txt", "r") as f:
-                for line in f:
-                    line = line.strip()
-                    if line:  
-                        uname, pwd = line.split(",", 1)
-                        usernames[uname] = pwd
-                return usernames
-        except FileNotFoundError:
-            pass 
-def add_bg_from_local(image_file):          #For backgroung image
-    with open(image_file, "rb") as f:
-        encoded = base64.b64encode(f.read()).decode()
-    page_bg = f"""
-    <style>
-    [data-testid="stAppViewContainer"] {{
-        background-image: url("data:image/png;base64,{encoded}");
-        background-size: cover;
-        background-position: center;
-    }}
-    </style>
-    """
-    st.markdown(page_bg, unsafe_allow_html=True)
-st.markdown(                  #Make buttons' background blue and text white
-    """
-    <style>
-    div.stButton > button {
-        color: white !important;
-        background-color: #0073e6;
-        border-radius: 8px;
-        padding: 8px 20px;
-        border: none;
-        font-weight: bold;
-        transition: 0.3s;
-    }
+    users = {}
+    try:
+        with open("users_information_database.txt", "r") as f:
+            for line in f:
+                line = line.strip()
+                if line:  # skip empty lines
+                    uname, pwd, fname, lname, house = line.split(",", 5)
+                    users[uname] = pwd
+    except FileNotFoundError:
+        pass  # if file doesn’t exist yet
+    return users
+def read_specific_user_information(username):
+    users_information = {}
+    try:
+        with open("users_information_database.txt", "r") as f:
+           for line in f:                
+                line = line.strip()
+                if line:  # skip empty lines
+                    uname, pwd, fname, lname, house = line.split(",", 4)
+                    users_information[uname] = [fname, lname, house]
+    except FileNotFoundError:
+        pass  # if file doesn’t exist yet
+    return users_information.get(username)
 
-    div.stButton > button:hover {
-        background-color: #005bb5;
-        color: #ffcc00 !important; /* text turns gold on hover */
-        transform: scale(1.05); /* button grows slightly */
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-st.markdown(              #Make text inputs white
-    """
-    <style>
-    /* Only the first text input's label */
-    div[data-testid="stTextInput"]:nth-of-type(1) label {
-        color: white !important;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-add_bg_from_local("background.png")
+setup.general_setup()
+setup.add_bg_from_local("background.png")
 st.markdown(          #For text "Harry Potter App"
     """
     <style>

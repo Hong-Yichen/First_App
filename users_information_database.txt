@@ -1,1 +1,2 @@
-Username,Hong Yichen, Gryffindor
+Username,password,Hong,Yichen,Gryffindor
+hongyichen.sg@gmail.com,Ycwelc0me,Hong,Yichen,Gryffindor
