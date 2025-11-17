@@ -3,26 +3,41 @@ import base64
 import datetime
 import setup
 
-def sign_up(username, password, users):
-    with open("usernames_and_passwords.txt", "a") as f:  # append mode
+def sign_up(username, password, fname, lname, users):
+    with open("users_information_database.txt", "a") as f:  # append mode
         if username in users:
             st.error("Looks like you already have a Harry Potter account with this email")
         else:
-            f.write(f"\n{username},{password}")
-            st.switch_page("pages/homepage_for_registered_users.py")
+            f.write(f"\n{username},{password},{fname},{lname},none")
+    st.session_state.user_information = read_specific_user_information(username)
+    st.switch_page("pages/homepage_for_registered_users.py")
 
 def read_users():
         usernames = {}
         try:
-            with open("usernames_and_passwords.txt", "r") as f:
+            with open("users_information_database.txt", "r") as f:
                 for line in f:
                     line = line.strip()
                     if line: 
-                        uname, pwd = line.split(",", 1)
+                        uname, pwd, fname, lname, house = line.split(",", 4)
                         usernames[uname] = pwd
                 return usernames
         except FileNotFoundError:
             pass 
+def read_specific_user_information(username):
+    users_information = {}
+    try:
+        with open("users_information_database.txt", "r") as f:
+           for line in f:                
+                line = line.strip()
+                if line:  # skip empty lines
+                    uname, pwd, fname, lname, house = line.split(",", 4)
+                    users_information[uname] = [fname, lname, house]
+    except FileNotFoundError:
+        pass  # if file doesn’t exist yet
+    print(users_information)
+    return users_information.get(username)
+
 setup.general_setup()
 setup.add_bg_from_local("background.png")
 st.markdown(          #For text "Harry Potter App"
@@ -91,7 +106,7 @@ st.markdown(           #For text "By proceeding you agree to our Terms of Use an
     unsafe_allow_html=True
 )
 if st.button("Sign up"):
-    sign_up(email, password, read_users())
+    sign_up(email, password, first_name, last_name, read_users())
 st.markdown(        #Make divider grey
     '<hr style="border:0;border-top:2px solid grey;margin:1rem 0;">',
     unsafe_allow_html=True

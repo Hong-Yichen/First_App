@@ -1,7 +1,7 @@
 import streamlit as st
 import base64
 
-def add_bg_from_local(image_file):          #For backgroung image
+def add_bg_from_local(image_file):          #For background image
     with open(image_file, "rb") as f:
         encoded = base64.b64encode(f.read()).decode()
     page_bg = f"""
