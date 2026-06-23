@@ -252,8 +252,11 @@ if "question_indices" not in st.session_state:
     st.session_state.question_indices = random.sample(range(len(QUESTION_POOL)), QUESTIONS_TO_SHOW)
 
 # -----------------------------
-# UI: header (clean)
+# UI: back arrow + header
 # -----------------------------
+if st.button("← Back"):
+    st.switch_page("pages/homepage_for_registered_users.py")
+
 st.markdown(          #For text "🪄Hogwarts Sorting"
     """
     <style>
