@@ -1,86 +1,52 @@
+"""
+Sign-up page for the Harry Potter App.
+
+Collects a new user's details, stores them in the flat-file database with
+house set to "none", and navigates directly to the registered-user homepage.
+"""
+
 import streamlit as st
-import base64
 import datetime
 import setup
+from setup import read_users, read_specific_user_information, DATABASE_FILE
 
-def sign_up(username, password, fname, lname, users):
-    with open("users_information_database.txt", "a") as f:  # append mode
+
+def sign_up(username: str, password: str, fname: str, lname: str, users: dict) -> None:
+    """Register a new user account and redirect to the homepage.
+
+    If the email is already registered, an error is shown instead.
+    New users are stored with house="none" until they complete the sorting quiz.
+
+    Args:
+        username: Email address to register.
+        password: Chosen password.
+        fname: User's first name.
+        lname: User's last name.
+        users: Dict of existing email -> password pairs from the database.
+    """
+    # Open the database in append mode; new record is written on its own line
+    with open(DATABASE_FILE, "a") as f:
         if username in users:
             st.error("Looks like you already have a Harry Potter account with this email")
         else:
+            # House is "none" — it will be set after the sorting quiz
             f.write(f"\n{username},{password},{fname},{lname},none")
+    # Load the new user's profile into session state so the homepage can display it
     st.session_state.user_information = read_specific_user_information(username)
     st.switch_page("pages/homepage_for_registered_users.py")
 
-def read_users():
-        usernames = {}
-        try:
-            with open("users_information_database.txt", "r") as f:
-                for line in f:
-                    line = line.strip()
-                    if line: 
-                        uname, pwd, fname, lname, house = line.split(",", 4)
-                        usernames[uname] = pwd
-                return usernames
-        except FileNotFoundError:
-            pass 
-def read_specific_user_information(username):
-    users_information = {}
-    try:
-        with open("users_information_database.txt", "r") as f:
-           for line in f:                
-                line = line.strip()
-                if line:  # skip empty lines
-                    uname, pwd, fname, lname, house = line.split(",", 4)
-                    users_information[uname] = [fname, lname, house]
-    except FileNotFoundError:
-        pass  # if file doesn’t exist yet
-    print(users_information)
-    return users_information.get(username)
 
+# --- Page setup: background image and global styles ---
 setup.general_setup()
 setup.add_bg_from_local("background.png")
-st.markdown(          #For text "Harry Potter App"
-    """
-    <style>
-    .magic-title {
-        font-family: 'Papyrus', fantasy;   /* mystical vibe */
-        color: #FFD700;                   /* golden yellow */
-        font-size: 60px;
-        text-shadow: 0 0 10px #FFD700, 0 0 20px #FFA500, 0 0 30px #FFD700;
-        text-align: center;
-        letter-spacing: 3px;
-    }
-    </style>
 
-    <h1 class="magic-title">Harry Potter App</h1>
-    """,
-    unsafe_allow_html=True
-)
-st.markdown(                 #For text "Created by Yichen"
-    """
-    <style>
-    .harry-caption {
-        font-family: Papyrus, fantasy;
-        color: #FFD700;
-        font-size: 20px;
-        text-align: center;
-        text-shadow: 
-            1px 1px 3px #000000,
-            0 0 8px #FFD700;
-    }
-    </style>
+# --- Page header ---
+setup.render_page_header("Harry Potter App")
 
-    <p class="harry-caption">Created by Yichen</p>
-    """,
-    unsafe_allow_html=True
-)
-st.markdown(           #For text "Sign up"
-    "<h2 style='color: white;'>Sign up</h2>",
-    unsafe_allow_html=True
-)
+# --- Sign-up form ---
+st.markdown("<h2 style='color: white;'>Sign up</h2>", unsafe_allow_html=True)
 
-st.markdown(           #For text "Enjoy magical features including the official sorting ceremony, portrait maker and more!"
+st.markdown(
     """
     <p style="color: white; font-size: 16px;">
     Enjoy magical features including the official sorting ceremony, portrait maker and more!
@@ -88,6 +54,7 @@ st.markdown(           #For text "Enjoy magical features including the official 
     """,
     unsafe_allow_html=True
 )
+
 st.date_input(
     "Date of Birthday",
     min_value=datetime.date(2000, 1, 1),
@@ -97,7 +64,8 @@ email = st.text_input("Email Address")
 password = st.text_input("Password")
 first_name = st.text_input("First Name")
 last_name = st.text_input("Last Name")
-st.markdown(           #For text "By proceeding you agree to our Terms of Use and acknowledge our Privacy Policy."
+
+st.markdown(
     """
     <p style="color: white; font-size: 16px;">
     By proceeding you agree to our Terms of Use and acknowledge our Privacy Policy.
@@ -105,15 +73,15 @@ st.markdown(           #For text "By proceeding you agree to our Terms of Use an
     """,
     unsafe_allow_html=True
 )
+
 if st.button("Sign up"):
     sign_up(email, password, first_name, last_name, read_users())
-st.markdown(        #Make divider grey
-    '<hr style="border:0;border-top:2px solid grey;margin:1rem 0;">',
-    unsafe_allow_html=True
-)
-st.markdown(         #For text "Already have an account?"
-    "<h2 style='color: white;'>Already have an account?</h2>",
-    unsafe_allow_html=True
-)
+
+# --- Divider ---
+st.markdown('<hr style="border:0;border-top:2px solid grey;margin:1rem 0;">', unsafe_allow_html=True)
+
+# --- Login redirect ---
+st.markdown("<h2 style='color: white;'>Already have an account?</h2>", unsafe_allow_html=True)
+
 if st.button("Login"):
     st.switch_page("pages/login_page.py")
