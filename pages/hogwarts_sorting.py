@@ -340,10 +340,10 @@ def compute_result_and_lock() -> None:
     st.session_state.result = chosen
     st.session_state.submitted = True
 
-    # Persist the result: replace "none" in the database with the assigned house,
-    # and update session state so the homepage shows the banner immediately.
-    setup.update_user_house(st.session_state.username, chosen)
-    st.session_state.user_information[2] = chosen
+    # Save the house to the database, replacing "none" with the house name
+    # formatted as first-letter uppercase, rest lowercase (e.g. "Gryffindor").
+    setup.update_user_house(st.session_state.username, chosen.capitalize())
+    st.session_state.user_information[2] = chosen.capitalize()
 
 
 # --- Submit button ---
