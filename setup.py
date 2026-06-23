@@ -198,3 +198,29 @@ def read_specific_user_information(username: str):
     except FileNotFoundError:
         pass
     return users_information.get(username)
+
+
+def update_user_house(username: str, house: str) -> None:
+    """Replace a user's house field in the database with the given house name.
+
+    Reads every record, updates the matching user's house, and writes the
+    file back. Called after the Hogwarts sorting quiz is completed.
+
+    Args:
+        username: Email address of the user to update.
+        house: The Hogwarts house to assign (e.g. "Gryffindor").
+    """
+    lines = []
+    try:
+        with open(DATABASE_FILE, "r") as f:
+            for line in f:
+                stripped = line.strip()
+                if stripped:
+                    parts = stripped.split(",", 4)
+                    if parts[0] == username:
+                        parts[4] = house  # replace the house field
+                    lines.append(",".join(parts))
+    except FileNotFoundError:
+        return
+    with open(DATABASE_FILE, "w") as f:
+        f.write("\n".join(lines))

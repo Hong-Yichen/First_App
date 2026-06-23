@@ -340,6 +340,11 @@ def compute_result_and_lock() -> None:
     st.session_state.result = chosen
     st.session_state.submitted = True
 
+    # Persist the result: replace "none" in the database with the assigned house,
+    # and update session state so the homepage shows the banner immediately.
+    setup.update_user_house(st.session_state.username, chosen)
+    st.session_state.user_information[2] = chosen
+
 
 # --- Submit button ---
 if not st.session_state.submitted:

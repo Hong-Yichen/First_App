@@ -20,8 +20,9 @@ def login(username: str, password: str, users: dict) -> None:
     """
     if username in users:
         if users[username] == password:
-            # Store the user's profile so other pages can access it via session state.
+            # Store the user's email and profile so other pages can access them.
             # user_information = [first_name, last_name, house]
+            st.session_state.username = username
             st.session_state.user_information = read_specific_user_information(username)
             st.switch_page("pages/homepage_for_registered_users.py")
         else:

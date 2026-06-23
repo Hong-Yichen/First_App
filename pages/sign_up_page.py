@@ -31,7 +31,8 @@ def sign_up(username: str, password: str, fname: str, lname: str, users: dict) -
         else:
             # House is "none" — it will be set after the sorting quiz
             f.write(f"\n{username},{password},{fname},{lname},none")
-    # Load the new user's profile into session state so the homepage can display it
+    # Store the user's email and profile so other pages can access them.
+    st.session_state.username = username
     st.session_state.user_information = read_specific_user_information(username)
     st.switch_page("pages/homepage_for_registered_users.py")
 
