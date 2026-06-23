@@ -1,10 +1,20 @@
+"""
+Homepage for registered users of the Harry Potter App.
+
+Displays the user's name and either:
+- A button to start the Hogwarts sorting quiz (if house == "none"), or
+- Their assigned house banner with crest and description (if already sorted).
+
+session_state.user_information is a list: [first_name, last_name, house]
+"""
+
 import streamlit as st
 import base64
-import setup
 import os
+import setup
 from typing import Optional, Dict
 
-# --- House data (edit paths/colors/descriptions if you want) ---
+# --- House data ---
 HOUSE_DESCS: Dict[str, str] = {
     "Gryffindor": "Bravery, daring, nerve and chivalry.",
     "Hufflepuff": "Hard work, patience, justice and loyalty.",
@@ -26,8 +36,18 @@ CREST_PATHS: Dict[str, str] = {
     "Slytherin": "crests/slytherin.png"
 }
 
+
 # --- Helpers ---
+
 def _img_to_data_uri(path: str) -> Optional[str]:
+    """Encode a local image file to a base64 data URI for embedding in HTML.
+
+    Args:
+        path: Relative path to the image file.
+
+    Returns:
+        A data URI string, or None if the file does not exist.
+    """
     if not path or not os.path.exists(path):
         return None
     mime = "image/png" if path.lower().endswith(".png") else "image/jpeg"
@@ -35,25 +55,34 @@ def _img_to_data_uri(path: str) -> Optional[str]:
         b64 = base64.b64encode(f.read()).decode()
     return f"data:{mime};base64,{b64}"
 
+
 def _render_house_banner(chosen_house: str, crest_size_px: int = 160, tie_info: Optional[list] = None) -> None:
-    """Internal renderer used by the per-house functions."""
+    """Render a coloured house banner with crest image and description.
+
+    Args:
+        chosen_house: Name of the Hogwarts house to display.
+        crest_size_px: Width in pixels for the crest image column.
+        tie_info: If a tie was broken, list of tied houses (currently unused in display).
+    """
     if not chosen_house:
         st.warning("No house provided.")
         return
 
     color = HOUSE_COLORS.get(chosen_house, "#222")
     desc = HOUSE_DESCS.get(chosen_house, "")
-    crest_path = CREST_PATHS.get(chosen_house)
-    crest_data = _img_to_data_uri(crest_path)
+    crest_data = _img_to_data_uri(CREST_PATHS.get(chosen_house, ""))
 
     img_html = ""
     if crest_data:
         img_html = (
             f"<div class='crest-wrap' style='display:flex;align-items:center;justify-content:center;'>"
-            f"<img src='{crest_data}' style='max-width:{crest_size_px}px;height:auto;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.30);'/>"
+            f"<img src='{crest_data}' style='max-width:{crest_size_px}px;height:auto;"
+            f"border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.30);'/>"
             f"</div>"
         )
 
+    # Two-column grid: text on the left, crest image on the right.
+    # On narrow screens (≤720px) the columns stack vertically.
     banner_html = f"""
     <style>
       .sh-banner {{
@@ -84,72 +113,50 @@ def _render_house_banner(chosen_house: str, crest_size_px: int = 160, tie_info: 
       {img_html}
     </div>
     """
-
     st.markdown(banner_html, unsafe_allow_html=True)
 
-# --- Per-house wrapper functions ---
+
+# --- Per-house wrapper functions (convenience callers) ---
+
 def render_gryffindor(crest_size_px: int = 160, tie_info: Optional[list] = None) -> None:
+    """Render the Gryffindor house banner."""
     _render_house_banner("Gryffindor", crest_size_px=crest_size_px, tie_info=tie_info)
 
 def render_hufflepuff(crest_size_px: int = 160, tie_info: Optional[list] = None) -> None:
+    """Render the Hufflepuff house banner."""
     _render_house_banner("Hufflepuff", crest_size_px=crest_size_px, tie_info=tie_info)
 
 def render_ravenclaw(crest_size_px: int = 160, tie_info: Optional[list] = None) -> None:
+    """Render the Ravenclaw house banner."""
     _render_house_banner("Ravenclaw", crest_size_px=crest_size_px, tie_info=tie_info)
 
 def render_slytherin(crest_size_px: int = 160, tie_info: Optional[list] = None) -> None:
+    """Render the Slytherin house banner."""
     _render_house_banner("Slytherin", crest_size_px=crest_size_px, tie_info=tie_info)
 
-# --- Example usage ---
-# Call one of these after you determine which house to show:
-# render_gryffindor(crest_size_px=200)
-# render_ravenclaw(crest_size_px=180, tie_info=['Ravenclaw','Slytherin'])
+
+# --- Page setup: background image and global styles ---
 setup.general_setup()
 setup.add_bg_from_local("background.png")
-st.markdown(          #For text "Harry Potter App"
-    """
-    <style>
-    .magic-title {
-        font-family: 'Papyrus', fantasy;   /* mystical vibe */
-        color: #FFD700;                   /* golden yellow */
-        font-size: 60px;
-        text-shadow: 0 0 10px #FFD700, 0 0 20px #FFA500, 0 0 30px #FFD700;
-        text-align: center;
-        letter-spacing: 3px;
-    }
-    </style>
 
-    <h1 class="magic-title">Harry Potter App</h1>
-    """,
-    unsafe_allow_html=True
-)
-st.markdown(                 #For text "Created by Yichen"
-    """
-    <style>
-    .harry-caption {
-        font-family: Papyrus, fantasy;
-        color: #FFD700;
-        font-size: 20px;
-        text-align: center;
-        text-shadow: 
-            1px 1px 3px #000000,
-            0 0 8px #FFD700;
-    }
-    </style>
+# --- Page header ---
+setup.render_page_header("Harry Potter App")
 
-    <p class="harry-caption">Created by Yichen</p>
-    """,
-    unsafe_allow_html=True
-)
+# --- User greeting and content ---
+# user_information = [first_name, last_name, house]
 st.subheader(f"{st.session_state.user_information[0]} {st.session_state.user_information[1]}")
-if st.session_state.user_information[2] == "none":
+
+house = st.session_state.user_information[2]
+
+if house == "none":
+    # User hasn't been sorted yet — show the quiz entry button
     if st.button("🪄Hogwarts Sorting"):
         st.switch_page("pages/hogwarts_sorting.py")
-elif st.session_state.user_information[2] == "Gryffindor":
+elif house == "Gryffindor":
     render_gryffindor(crest_size_px=200)
-elif st.session_state.user_information == "Hufflepuff":
+elif house == "Hufflepuff":
     render_hufflepuff(crest_size_px=200)
-elif st.session_state.user_information == "Ravenclaw":
+elif house == "Ravenclaw":
     render_ravenclaw(crest_size_px=200)
-elif st.session_state.user_information == "Slytherin":
+elif house == "Slytherin":
     render_slytherin(crest_size_px=200)

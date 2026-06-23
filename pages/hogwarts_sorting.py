@@ -1,3 +1,12 @@
+"""
+Hogwarts House Sorting Quiz page.
+
+Randomly selects QUESTIONS_TO_SHOW questions from a pool each session,
+tallies house scores based on the user's answers, and reveals the result
+with a house crest banner. Ties are broken deterministically using a hash
+of the user's answers so the same answer set always yields the same house.
+"""
+
 import streamlit as st
 import random
 import os
@@ -8,9 +17,9 @@ setup.general_setup()
 setup.add_bg_from_local("background.png")
 
 st.set_page_config(page_title="Hogwarts House Quiz", page_icon="🪄", layout="centered")
-# -----------------------------
-# Houses, colors, crest paths
-# -----------------------------
+
+# --- House definitions ---
+# Each house maps to a short description shown in the result banner.
 HOUSES = {
     "Gryffindor": "Bravery, daring, nerve and chivalry.",
     "Hufflepuff": "Hard work, patience, justice and loyalty.",
@@ -18,6 +27,7 @@ HOUSES = {
     "Slytherin": "Ambition, cunning, resourcefulness and leadership."
 }
 
+# Banner background colour for each house
 HOUSE_COLORS = {
     "Gryffindor": "#7F0909",
     "Hufflepuff": "#ECB939",
@@ -25,7 +35,7 @@ HOUSE_COLORS = {
     "Slytherin": "#1A472A"
 }
 
-# Put PNG crest images in ./crests/ with these names (optional)
+# Optional PNG crest images placed in ./crests/
 CREST_PATHS = {
     "Gryffindor": "crests/gryffindor.png",
     "Hufflepuff": "crests/hufflepuff.png",
@@ -33,9 +43,8 @@ CREST_PATHS = {
     "Slytherin": "crests/slytherin.png"
 }
 
-# -----------------------------
-# Full pool of 12 questions
-# -----------------------------
+# --- Question pool ---
+# Each question has 4 options; each option scores 2 points toward one house.
 QUESTION_POOL = [
     {
         "q": "A single, unlabelled bottle sits on a windowsill. What catches your eye?",
@@ -94,16 +103,16 @@ QUESTION_POOL = [
     {
         "q": "On a note left under your door is only one word. Which would please you most?",
         "options": {
-            "‘Stay’ — company matters when night is long.": {"Hufflepuff": 2},
-            "‘Look’ — there is something to be deciphered.": {"Ravenclaw": 2},
-            "‘Now’ — the moment asks for action.": {"Gryffindor": 2},
-            "‘Remember’ — secrets may be currency.": {"Slytherin": 2},
+            "'Stay' — company matters when night is long.": {"Hufflepuff": 2},
+            "'Look' — there is something to be deciphered.": {"Ravenclaw": 2},
+            "'Now' — the moment asks for action.": {"Gryffindor": 2},
+            "'Remember' — secrets may be currency.": {"Slytherin": 2},
         }
     },
     {
         "q": "A sudden storm blows through. What do you secure first?",
         "options": {
-            "The windows so a neighbour’s cat won’t be exposed.": {"Hufflepuff": 2},
+            "The windows so a neighbour's cat won't be exposed.": {"Hufflepuff": 2},
             "A small journal that holds neat lists and sketches.": {"Ravenclaw": 2},
             "The flagpole — it feels wrong to leave it loose.": {"Gryffindor": 2},
             "The trunks with locks you can later use for leverage.": {"Slytherin": 2},
@@ -157,7 +166,7 @@ QUESTION_POOL = [
     {
         "q": "In a quiet hour, you prefer to occupy a corner with:",
         "options": {
-            "A woven blanket and someone’s warm laughter.": {"Hufflepuff": 2},
+            "A woven blanket and someone's warm laughter.": {"Hufflepuff": 2},
             "A tall stack of slim volumes with dusty spines.": {"Ravenclaw": 2},
             "An open window where the first bird calls in the morning.": {"Gryffindor": 2},
             "A locked chest that opens only after you return.": {"Slytherin": 2},
@@ -184,10 +193,10 @@ QUESTION_POOL = [
     {
         "q": "A narrow letter arrives: one line, one sentence. Which would you hope it says?",
         "options": {
-            "‘Come, there’s room at the table.’": {"Hufflepuff": 2},
-            "‘Look here — the margin contains the surprising part.’": {"Ravenclaw": 2},
-            "‘Bring your courage; it will be needed.’": {"Gryffindor": 2},
-            "‘Meet me where the shutters close after dusk.’": {"Slytherin": 2},
+            "'Come, there's room at the table.'": {"Hufflepuff": 2},
+            "'Look here — the margin contains the surprising part.'": {"Ravenclaw": 2},
+            "'Bring your courage; it will be needed.'": {"Gryffindor": 2},
+            "'Meet me where the shutters close after dusk.'": {"Slytherin": 2},
         }
     },
     {
@@ -219,13 +228,19 @@ QUESTION_POOL = [
     }
 ]
 
-# -----------------------------
-# App configuration and helpers
-# -----------------------------
-QUESTIONS_TO_SHOW = 7  # pick 7 of the 12 each session
+# Number of questions shown per session (randomly drawn from the full pool)
+QUESTIONS_TO_SHOW = 7
 
-def img_to_data_uri(path):
-    """Return data URI for PNG/JPG crest (or None if not found)."""
+
+def img_to_data_uri(path: str):
+    """Encode a local PNG/JPG crest image as a base64 data URI for HTML embedding.
+
+    Args:
+        path: Relative path to the image file.
+
+    Returns:
+        A data URI string, or None if the file does not exist.
+    """
     if not os.path.exists(path):
         return None
     with open(path, "rb") as f:
@@ -234,9 +249,10 @@ def img_to_data_uri(path):
     mime = "image/png" if path.lower().endswith(".png") else "image/jpeg"
     return f"data:{mime};base64,{b64}"
 
-# -----------------------------
-# Session state initialization
-# -----------------------------
+
+# --- Session state initialisation ---
+# These keys persist across reruns so the quiz state is preserved while the user
+# is on this page. shuffled_options ensures answer order doesn't change on rerun.
 if "submitted" not in st.session_state:
     st.session_state.submitted = False
 if "answers" not in st.session_state:
@@ -248,59 +264,22 @@ if "tie_info" not in st.session_state:
 if "shuffled_options" not in st.session_state:
     st.session_state.shuffled_options = {}
 if "question_indices" not in st.session_state:
-    # randomly choose QUESTIONS_TO_SHOW indices from pool once per session
+    # Pick QUESTIONS_TO_SHOW random questions once; kept fixed for the whole session
     st.session_state.question_indices = random.sample(range(len(QUESTION_POOL)), QUESTIONS_TO_SHOW)
 
-# -----------------------------
-# UI: back arrow + header
-# -----------------------------
+# --- Page header ---
+# Back arrow to return to the registered-user homepage
 if st.button("← Back"):
     st.switch_page("pages/homepage_for_registered_users.py")
 
-st.markdown(          #For text "🪄Hogwarts Sorting"
-    """
-    <style>
-    .magic-title {
-        font-family: 'Papyrus', fantasy;   /* mystical vibe */
-        color: #FFD700;                   /* golden yellow */
-        font-size: 60px;
-        text-shadow: 0 0 10px #FFD700, 0 0 20px #FFA500, 0 0 30px #FFD700;
-        text-align: center;
-        letter-spacing: 3px;
-    }
-    </style>
+setup.render_page_header("🪄Hogwarts Sorting")
 
-    <h1 class="magic-title">🪄Hogwarts Sorting</h1>
-    """,
-    unsafe_allow_html=True
-)
-st.markdown(                 #For text "Created by Yichen"
-    """
-    <style>
-    .harry-caption {
-        font-family: Papyrus, fantasy;
-        color: #FFD700;
-        font-size: 20px;
-        text-align: center;
-        text-shadow: 
-            1px 1px 3px #000000,
-            0 0 8px #FFD700;
-    }
-    </style>
-
-    <p class="harry-caption">Created by Yichen</p>
-    """,
-    unsafe_allow_html=True
-)
-
-# -----------------------------
-# Render the selected questions
-# -----------------------------
+# --- Question rendering ---
 for display_idx, q_idx in enumerate(st.session_state.question_indices, start=1):
     qdata = QUESTION_POOL[q_idx]
     key = f"q{display_idx}"
 
-    # Shuffle options once per question key in the session
+    # Shuffle each question's options once per session to prevent answer-position bias
     if key not in st.session_state.shuffled_options:
         opts = list(qdata["options"].keys())
         random.shuffle(opts)
@@ -309,31 +288,37 @@ for display_idx, q_idx in enumerate(st.session_state.question_indices, start=1):
     opts_shuffled = st.session_state.shuffled_options[key]
 
     if not st.session_state.submitted:
-        # placeholder prevents any default selection bias
+        # Prepend a placeholder so no option is pre-selected
         choices = ["-- select an option --"] + opts_shuffled
         selection = st.radio(f"**Q{display_idx}. {qdata['q']}**", choices, key=key)
         st.session_state.answers[key] = None if selection == "-- select an option --" else selection
     else:
-        # Locked view after submission: plain text that can't be edited
+        # After submission, show answers as read-only text
         st.markdown(f"**Q{display_idx}. {qdata['q']}**")
         selected_text = st.session_state.answers.get(key, "No answer")
         st.markdown(f"> {selected_text}")
 
-st.write("")  # spacing
+st.write("")  # spacing before the submit button
 
-# -----------------------------
-# Compute result
-# -----------------------------
-def compute_result_and_lock():
-    # Tally scores
+
+# --- Scoring and result logic ---
+
+def compute_result_and_lock() -> None:
+    """Tally house scores from the user's answers, determine the winning house, and lock the quiz.
+
+    Each chosen answer contributes 2 points to one house. If two or more houses
+    tie on points, the winner is chosen deterministically by seeding random with
+    a hash of the concatenated answers — so the same responses always resolve to
+    the same house across reruns.
+    """
     scores = {h: 0 for h in HOUSES}
+
     for display_idx, q_idx in enumerate(st.session_state.question_indices, start=1):
         key = f"q{display_idx}"
         chosen_text = st.session_state.answers.get(key)
         if not chosen_text:
             continue
-        qmap = QUESTION_POOL[q_idx]["options"]
-        mapping = qmap.get(chosen_text)
+        mapping = QUESTION_POOL[q_idx]["options"].get(chosen_text)
         if mapping:
             for house, pts in mapping.items():
                 scores[house] += pts
@@ -345,6 +330,8 @@ def compute_result_and_lock():
         chosen = top[0]
         st.session_state.tie_info = None
     else:
+        # Tie-breaking: hash the user's answers to get a stable seed, then pick
+        # one of the tied houses. This ensures consistency on page reruns.
         concat = "|".join([str(st.session_state.answers.get(f"q{i}")) for i in range(1, QUESTIONS_TO_SHOW + 1)])
         seed = abs(hash(concat))
         chosen = random.Random(seed).choice(top)
@@ -353,42 +340,37 @@ def compute_result_and_lock():
     st.session_state.result = chosen
     st.session_state.submitted = True
 
-# -----------------------------
-# Submit button (disabled after submit)
-# -----------------------------
+
+# --- Submit button ---
 if not st.session_state.submitted:
     if st.button("✨ Reveal My House"):
-        # validate all questions answered
         missing = [k for k, v in st.session_state.answers.items() if not v]
         if missing:
             st.warning("Please answer all questions before submitting.")
         else:
             compute_result_and_lock()
 
-# -----------------------------
-# Display result banner (grid layout — responsive, prevents cramped text)
-# -----------------------------
+
+# --- Result banner ---
 if st.session_state.submitted and st.session_state.result:
     chosen = st.session_state.result
     color = HOUSE_COLORS.get(chosen, "#222")
     desc = HOUSES[chosen]
-    crest_path = CREST_PATHS.get(chosen)
-    crest_data_uri = img_to_data_uri(crest_path) if crest_path else None
+    crest_data_uri = img_to_data_uri(CREST_PATHS.get(chosen, ""))
 
-    # Use a grid with minmax(0,1fr) so text area can shrink properly without forcing tiny columns.
-    # crest column set to 160px (adjust as desired). On narrow screens the grid stacks so text isn't cramped.
     img_html = ""
     if crest_data_uri:
         img_html = (
             f"<div class='crest-wrap' style='display:flex;align-items:center;justify-content:center;'>"
-            f"<img src='{crest_data_uri}' class='crest-img' style='max-width:160px;height:auto;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.30);'/>"
+            f"<img src='{crest_data_uri}' class='crest-img' style='max-width:160px;height:auto;"
+            f"border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.30);'/>"
             f"</div>"
         )
 
-    # CSS included in the same HTML block for isolation
+    # Two-column grid: house name + description on the left, crest on the right.
+    # On narrow screens (≤720px) the columns stack vertically.
     banner_html = f"""
     <style>
-      /* Ensure the text container can shrink/grow without pushing layout into tiny columns */
       .sh-banner {{
         background:{color};
         padding:22px;
@@ -401,7 +383,7 @@ if st.session_state.submitted and st.session_state.result:
         max-width:100%;
       }}
       .sh-banner .text {{
-        min-width:0; /* very important to allow proper flexing in grid */
+        min-width:0;
       }}
       .sh-banner p {{
         margin:0;
@@ -412,7 +394,6 @@ if st.session_state.submitted and st.session_state.result:
         word-break:normal;
         white-space:normal;
       }}
-      /* Responsive: stack crest below text on small screens */
       @media (max-width:720px) {{
         .sh-banner {{
           grid-template-columns: 1fr;
@@ -439,5 +420,4 @@ if st.session_state.submitted and st.session_state.result:
       {img_html}
     </div>
     """
-
     st.markdown(banner_html, unsafe_allow_html=True)
